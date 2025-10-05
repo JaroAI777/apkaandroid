@@ -1,1 +1,207 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Specyfikacja aplikacji blokującej telefon</title>
+  <style>
+    body { font-family: "Segoe UI", Roboto, sans-serif; margin: 2rem; line-height: 1.6; color: #222; }
+    h1, h2, h3 { color: #1f4b99; }
+    code { background: #f3f4f6; padding: 0.2rem 0.4rem; border-radius: 4px; }
+    pre { background: #0f172a; color: #f8fafc; padding: 1rem; border-radius: 8px; overflow-x: auto; }
+    section { margin-bottom: 2.5rem; }
+    ul { margin: 0.5rem 0 0.5rem 1.5rem; }
+    .card { border-left: 4px solid #1f4b99; padding-left: 1rem; margin: 1rem 0; }
+    .flow-step { font-weight: 600; color: #0f172a; }
+  </style>
+</head>
+<body>
+  <h1>Aplikacja Android blokująca urządzenie do czasu wykonania zadania</h1>
+  <p>
+    Dokument opisuje koncepcję i kluczowe elementy implementacji aplikacji na Androida, która
+    blokuje urządzenie użytkownika do momentu ukończenia zadanego zadania edukacyjnego (np. lekcji
+    języka angielskiego). W stanie blokady dostępne pozostają jedynie podstawowe funkcje – połączenia
+    głosowe i wiadomości SMS.
+  </p>
 
+  <section>
+    <h2>Główne założenia</h2>
+    <ul>
+      <li>Aplikacja wykorzystuje tryb <strong>Device Owner</strong> i tryb <strong>Kiosk (Lock Task Mode)</strong>, aby zablokować dostęp do innych aplikacji.</li>
+      <li>Użytkownik musi obejrzeć dostarczony materiał wideo lub przejść przez interaktywną lekcję.</li>
+      <li>Po zakończeniu zadania urządzenie wraca do normalnego trybu, a blokada jest zdejmowana.</li>
+      <li>Z telefonu można wykonywać połączenia i wysyłać SMS-y bez konieczności wychodzenia z aplikacji (poprzez dedykowane moduły w aplikacji).</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Architektura modułów</h2>
+    <div class="card">
+      <h3>1. <code>DeviceAdminReceiver</code></h3>
+      <p>Rejestruje aplikację jako właściciela urządzenia, pozwala wymuszać polityki bezpieczeństwa i włączać tryb blokady.</p>
+    </div>
+    <div class="card">
+      <h3>2. <code>MainActivity</code></h3>
+      <p>Warstwa prezentacji oparta o Jetpack Compose. Wyświetla ekran blokady, monitoruje postępy lekcji i obsługuje przycisk SOS do połączeń alarmowych.</p>
+    </div>
+    <div class="card">
+      <h3>3. <code>LessonPlayerService</code></h3>
+      <p>Komponent odpowiedzialny za streamowanie/odtwarzanie lekcji wideo, raportujący o zakończeniu zadania.</p>
+    </div>
+    <div class="card">
+      <h3>4. <code>CommunicationModule</code></h3>
+      <p>Dostarcza minimalny interfejs do wybierania numerów i wysyłania SMS-ów, korzystając z uprawnień <code>CALL_PHONE</code> i <code>SEND_SMS</code>.</p>
+    </div>
+    <div class="card">
+      <h3>5. <code>ProgressRepository</code></h3>
+      <p>Przechowuje informacje o statusie zadania (w <code>DataStore</code> lub bazie lokalnej), aby blokada utrzymywała się nawet po restarcie.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Scenariusz działania</h2>
+    <ol>
+      <li><span class="flow-step">Rejestracja aplikacji jako właściciel urządzenia.</span> Proces konfiguracji urządzenia (Device Policy Controller) ustawia aplikację jako <em>device owner</em>.</li>
+      <li><span class="flow-step">Uruchomienie trybu Lock Task.</span> <code>MainActivity</code> wywołuje <code>startLockTask()</code>, ograniczając dostęp do innych aplikacji.</li>
+      <li><span class="flow-step">Odtwarzanie lekcji.</span> <code>LessonPlayerService</code> udostępnia wideo i blokuje możliwość przewinięcia do końca.</li>
+      <li><span class="flow-step">Monitorowanie postępów.</span> Po ukończeniu nagrania wysyłany jest sygnał, który aktualizuje <code>ProgressRepository</code>.</li>
+      <li><span class="flow-step">Zdejmowanie blokady.</span> Gdy zadanie jest ukończone, aplikacja wywołuje <code>stopLockTask()</code>, przywracając normalne działanie urządzenia.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Przykładowe fragmenty kodu</h2>
+    <h3>Manifest i uprawnienia</h3>
+    <pre><code class="language-xml">&lt;manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lockedlesson"&gt;
+
+    &lt;uses-permission android:name="android.permission.CALL_PHONE" /&gt;
+    &lt;uses-permission android:name="android.permission.SEND_SMS" /&gt;
+
+    &lt;application
+        android:allowBackup="false"
+        android:label="Lekcja blokująca"
+        android:theme="@style/Theme.Material3.DayNight.NoActionBar"&gt;
+
+        &lt;activity
+            android:name=".MainActivity"
+            android:launchMode="singleInstance"
+            android:exported="true"
+            android:taskAffinity=""
+            android:screenOrientation="portrait"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"&gt;
+            &lt;intent-filter&gt;
+                &lt;action android:name="android.intent.action.MAIN" /&gt;
+                &lt;category android:name="android.intent.category.LAUNCHER" /&gt;
+            &lt;/intent-filter&gt;
+        &lt;/activity&gt;
+
+        &lt;service
+            android:name=".LessonPlayerService"
+            android:exported="false" /&gt;
+
+        &lt;receiver
+            android:name=".policy.AppDeviceAdminReceiver"
+            android:permission="android.permission.BIND_DEVICE_ADMIN"
+            android:exported="true"&gt;
+            &lt;meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin_receiver" /&gt;
+            &lt;intent-filter&gt;
+                &lt;action android:name="android.app.action.DEVICE_ADMIN_ENABLED" /&gt;
+            &lt;/intent-filter&gt;
+        &lt;/receiver&gt;
+
+    &lt;/application&gt;
+&lt;/manifest&gt;</code></pre>
+
+    <h3>Device Owner i tryb blokady</h3>
+    <pre><code class="language-kotlin">class AppDeviceAdminReceiver : DeviceAdminReceiver()
+
+class MainActivity : ComponentActivity() {
+    private val devicePolicyManager by lazy {
+        getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableLockTaskIfNeeded()
+        setContent { LockedLessonScreen() }
+    }
+
+    private fun enableLockTaskIfNeeded() {
+        if (devicePolicyManager.isLockTaskPermitted(packageName)) {
+            startLockTask()
+        } else {
+            // Wyświetl komunikat o konieczności ustanowienia aplikacji jako właściciela urządzenia
+        }
+    }
+
+    fun releaseLock() {
+        stopLockTask()
+    }
+}
+</code></pre>
+
+    <h3>Obsługa lekcji</h3>
+    <pre><code class="language-kotlin">@HiltViewModel
+class LessonViewModel @Inject constructor(
+    private val progressRepository: ProgressRepository,
+    private val lessonPlayer: LessonPlayer
+) : ViewModel() {
+
+    val uiState = lessonPlayer.progress.map { progress ->
+        LessonUiState(
+            isLessonCompleted = progress >= 1.0f,
+            watchedSeconds = lessonPlayer.watchedSeconds,
+            totalSeconds = lessonPlayer.totalSeconds
+        )
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, LessonUiState())
+
+    fun onLessonCompleted() {
+        progressRepository.setCompleted(true)
+    }
+}
+</code></pre>
+
+    <h3>Moduł połączeń i SMS</h3>
+    <pre><code class="language-kotlin">object CommunicationModule {
+    fun makePhoneCall(context: Context, phoneNumber: String) {
+        val intent = Intent(Intent.ACTION_CALL).apply {
+            data = Uri.parse("tel:$phoneNumber")
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(intent)
+    }
+
+    fun sendSms(phoneNumber: String, message: String) {
+        val smsManager = SmsManager.getDefault()
+        smsManager.sendTextMessage(phoneNumber, null, message, null, null)
+    }
+}
+</code></pre>
+  </section>
+
+  <section>
+    <h2>Bezpieczeństwo i ochrona prywatności</h2>
+    <ul>
+      <li>Komunikacja z serwerem zdalnym (np. weryfikacja lekcji) powinna być szyfrowana (HTTPS, TLS 1.2+).</li>
+      <li>Postęp lekcji przechowywany lokalnie tylko w formie niezbędnej do odblokowania urządzenia.</li>
+      <li>Możliwość awaryjnego zdjęcia blokady po podaniu kodu administratora.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Testy i walidacja</h2>
+    <ul>
+      <li>Testy jednostkowe logiki postępu i repozytorium danych.</li>
+      <li>Testy instrumentalne sprawdzające działanie trybu Lock Task na emulatorach fizycznych.</li>
+      <li>Testy UI (Espresso) dla ścieżki przejścia lekcji oraz modułu połączeń/SMS.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p><em>Dokument ten stanowi punkt wyjścia do implementacji pełnej aplikacji w Android Studio.</em></p>
+  </footer>
+</body>
+</html>
