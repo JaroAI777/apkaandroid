@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">Task Lock</string>
+    <string name="notification_channel_kiosk">Kiosk session</string>
+    <string name="notification_channel_lesson">Lesson playback</string>
+    <string name="notification_kiosk_title">Telefon zablokowany</string>
+    <string name="notification_kiosk_message">Ukończ lekcję, aby odblokować urządzenie.</string>
+    <string name="notification_lesson_title">Lekcja w toku</string>
+    <string name="notification_lesson_message">Obejrzyj lekcję do końca, aby uzyskać dostęp.</string>
+    <string name="lesson_completed">Lekcja ukończona!</string>
+    <string name="start_lesson">Rozpocznij lekcję</string>
+    <string name="call_support">Zadzwoń</string>
+    <string name="send_sms">Wyślij SMS</string>
+    <string name="settings">Ustawienia</string>
+    <string name="unlock">Odblokuj</string>
+    <string name="lesson_description">Musisz obejrzeć poniższe nagranie. Po ukończeniu odblokujemy telefon.</string>
+    <string name="unlock_instructions">Podaj kod administratora, aby odblokować.</string>
+    <string name="invalid_code">Niepoprawny kod</string>
+    <string name="lesson_time_remaining">Pozostały czas: %1$d s</string>
+    <string name="settings_title">Zarządzanie lekcjami</string>
+    <string name="settings_description">Skonfiguruj lekcję i kod administratora.</string>
+    <string name="label_lesson_url">Adres URL lekcji (MP4 lub HLS)</string>
+    <string name="label_unlock_code">Kod administratora</string>
+    <string name="action_save">Zapisz</string>
+    <string name="lesson_saved">Lekcja zapisana</string>
+    <string name="device_admin_enabled">Uprawnienia administratora zostały włączone.</string>
+    <string name="device_admin_disabled">Uprawnienia administratora zostały wyłączone.</string>
+    <string name="toast_invalid_uri">Podaj poprawny adres URL.</string>
+</resources>
