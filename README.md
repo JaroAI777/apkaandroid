@@ -34,6 +34,26 @@ A GitHub Actions workflow is included. After pushing this repository to GitHub:
 
 > **Note:** This environment cannot host files or produce public download links automatically. The workflow provides a sharable artifact link within GitHub once you run it in your own repository.
 
+## Jak opublikować repozytorium i pobrać APK
+
+1. **Utwórz repozytorium.** Na GitHubie kliknij **New repository**, nadaj mu nazwę (np. `TaskLock`) i zostaw je puste.
+2. **Powiąż lokalne źródła.** W katalogu projektu wykonaj:
+
+   ```bash
+   git remote add origin git@github.com:<twoja_nazwa_użytkownika>/TaskLock.git
+   git push -u origin main
+   ```
+
+   > Jeżeli używasz HTTPS, zamień adres na `https://github.com/<twoja_nazwa_użytkownika>/TaskLock.git`.
+3. **Włącz GitHub Actions.** Wejdź na kartę **Actions** w repozytorium i zaakceptuj monit „I understand my workflows, go ahead and enable them”.
+4. **Uruchom workflow.** Przy każdym `git push` pipeline `Android CI` startuje automatycznie. Możesz też kliknąć **Run workflow** i wybrać gałąź `main`.
+5. **Pobierz artefakt APK.** Po zakończeniu workflow:
+   - Otwórz wynik uruchomienia (Run).
+   - W sekcji **Artifacts** kliknij `TaskLock-apk` – pobierzesz archiwum `.zip` z plikami `app-debug.apk` i `app-release-unsigned.apk`.
+6. **Zainstaluj na urządzeniu.** Rozpakuj archiwum, skopiuj `app-debug.apk` na telefon i zainstaluj je (wcześniej zezwól na instalację z nieznanych źródeł).
+
+Po podpisaniu `app-release-unsigned.apk` własnym kluczem możesz publikować aplikację w Google Play lub dystrybuować ją użytkownikom końcowym.
+
 ## Customising the lesson
 
 - Open **Settings** inside the kiosk experience to set a streaming URL for the lesson video and define the unlock code.
