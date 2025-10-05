@@ -56,21 +56,42 @@ A GitHub Actions workflow is included. After pushing this repository to GitHub:
 
 ## Jak opublikować repozytorium i pobrać APK
 
-1. **Utwórz repozytorium.** Na GitHubie kliknij **New repository**, nadaj mu nazwę (np. `TaskLock`) i zostaw je puste.
-2. **Powiąż lokalne źródła.** W katalogu projektu wykonaj:
+### A. Wariant z wierszem poleceń (Git)
+
+1. **Zaloguj się w GitHubie i utwórz nowe repozytorium.** Kliknij **New repository**, wpisz nazwę (np. `TaskLock`) i pozostaw je puste (bez README).
+2. **Skonfiguruj Git lokalnie.** Jeśli jeszcze nie masz repozytorium, zainicjuj je w katalogu projektu:
 
    ```bash
+   git init
+   git add .
+   git commit -m "Initial import of TaskLock"
+   ```
+
+3. **Połącz katalog z GitHubem i wypchnij kod.** W terminalu uruchom:
+
+   ```bash
+   git branch -M main
    git remote add origin git@github.com:<twoja_nazwa_użytkownika>/TaskLock.git
    git push -u origin main
    ```
 
-   > Jeżeli używasz HTTPS, zamień adres na `https://github.com/<twoja_nazwa_użytkownika>/TaskLock.git`.
-3. **Włącz GitHub Actions.** Wejdź na kartę **Actions** w repozytorium i zaakceptuj monit „I understand my workflows, go ahead and enable them”.
-4. **Uruchom workflow.** Przy każdym `git push` pipeline `Android CI` startuje automatycznie. Możesz też kliknąć **Run workflow** i wybrać gałąź `main`.
-5. **Pobierz artefakt APK.** Po zakończeniu workflow:
-   - Otwórz wynik uruchomienia (Run).
-   - W sekcji **Artifacts** kliknij `TaskLock-apk` – pobierzesz archiwum `.zip` z plikami `app-debug.apk` i `app-release-unsigned.apk`.
-6. **Zainstaluj na urządzeniu.** Rozpakuj archiwum, skopiuj `app-debug.apk` na telefon i zainstaluj je (wcześniej zezwól na instalację z nieznanych źródeł).
+   > Jeśli korzystasz z HTTPS, użyj adresu `https://github.com/<twoja_nazwa_użytkownika>/TaskLock.git`. W razie problemów z kluczem SSH sprawdź `ssh -T git@github.com`.
+
+4. **Zweryfikuj pliki na GitHubie.** Odśwież stronę repozytorium – katalogi i pliki projektu powinny być widoczne.
+5. **Włącz GitHub Actions i pobierz APK.** Wejdź na kartę **Actions**, zatwierdź uruchomienie workflow, poczekaj na zakończenie zadania `Android CI`, a następnie pobierz artefakt `TaskLock-apk` (zawiera `app-debug.apk` i `app-release-unsigned.apk`).
+
+### B. Wariant przez przeglądarkę (Upload plików)
+
+1. Spakuj katalog projektu do archiwum `.zip` lub `.tar.gz`.
+2. W nowym repozytorium GitHub kliknij **Add file → Upload files**.
+3. Przeciągnij pliki (lub archiwum) do okna przeglądarki, dodaj komunikat commita i kliknij **Commit changes**.
+4. Po pierwszym commicie sekcja **Actions** automatycznie uruchomi workflow. Po jego zakończeniu pobierz artefakt `TaskLock-apk` tak jak w wariancie A.
+
+### C. GitHub Desktop (interfejs graficzny)
+
+1. W aplikacji GitHub Desktop wybierz **File → Add local repository…** i wskaż katalog projektu.
+2. W prawym górnym rogu kliknij **Publish repository**, ustaw nazwę i widoczność, a następnie potwierdź publikację.
+3. Po publikacji otwórz repozytorium w przeglądarce, przejdź do zakładki **Actions** i pobierz artefakt `TaskLock-apk` z workflow `Android CI`.
 
 Po podpisaniu `app-release-unsigned.apk` własnym kluczem możesz publikować aplikację w Google Play lub dystrybuować ją użytkownikom końcowym.
 
