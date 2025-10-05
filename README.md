@@ -15,6 +15,26 @@ TaskLock is a kiosk-mode Android application that locks the device until a confi
 3. Connect a device (API level 24+) or create an emulator.
 4. Build and run the **app** module. Android Studio will produce `app/build/outputs/apk/debug/app-debug.apk` which can be sideloaded on your device.
 
+## Jak to uruchomić w Android Studio
+
+1. **Otwórz projekt.** W Android Studio wybierz **File → Open…** i wskaż katalog z tym repozytorium. Po otwarciu poczekaj, aż zakończy się synchronizacja Gradle.
+2. **Zainstaluj wymagane SDK.** Jeśli pojawi się monit o brakujące komponenty (np. Android SDK 34 lub Google Play Services), pozwól Android Studio je doinstalować.
+3. **Skonfiguruj urządzenie testowe.** Podłącz fizyczny telefon z włączonym `USB debugging` albo utwórz emulator w **Device Managerze** (minimum Android 7.0 / API 24).
+4. **Uruchom aplikację.** Na pasku narzędzi wybierz konfigurację „app” i kliknij **Run** ▶️. Aplikacja zostanie zainstalowana i wystartuje na wybranym urządzeniu.
+5. **Włącz tryb kiosk (opcjonalnie na potrzeby testów).** Aby aplikacja mogła blokować system, ustaw ją jako `device owner`:
+   ```bash
+   adb shell dpm set-device-owner com.tasklock.app/.device.AdminReceiver
+   ```
+   Po tej operacji ponownie uruchom aplikację – automatycznie przełączy się w tryb zablokowanego urządzenia.
+6. **Testuj przepływ lekcji.** Odtwórz wideo, zmień ustawienia lekcji lub użyj kodu administratora, aby odblokować urządzenie.
+7. **Wyłącz tryb kiosk po testach.** Jeśli chcesz wrócić do normalnego działania telefonu lub emulatora, usuń uprawnienia administratora:
+   ```bash
+   adb shell dpm remove-active-admin com.tasklock.app/.device.AdminReceiver
+   adb shell dpm set-device-owner ''
+   ```
+
+> Jeżeli urządzenie zgłosi, że `Device owner` został już ustawiony dla innej aplikacji, zresetuj emulator (`adb emu avd wipe-data`) lub przywróć telefon do ustawień fabrycznych przed ponowną próbą.
+
 ### Command-line build
 
 If you prefer the terminal, install the Android SDK and run:
